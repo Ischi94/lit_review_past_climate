@@ -88,3 +88,4 @@ dat_final %>%
   ggplot(aes(year)) +
   geom_bar() +
   theme(axis.text.x = element_text(angle = 45))
+
