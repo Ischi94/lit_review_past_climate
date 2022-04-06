@@ -57,11 +57,34 @@ dat_titles %>%
                  "cleaned",
                  "cleaned_by_title.csv"))
 
+# remove excluded entries
+dat_unique <- dat_titles %>% 
+  filter(screened_titles == "selected")
+
+# manually screen abstracts
+dat_abstracts <- screen_abstracts(dat_unique)
+
+# save in between 
+dat_abstracts %>% 
+  write_csv(here("bibliography",
+                 "cleaned",
+                 "cleaned_by_abstract.csv"))
+
+
+# remove excluded entries
+dat_final <- dat_abstracts %>% 
+  filter(screened_abstracts == "selected")
+
+# save final data 
+dat_final %>% 
+  write_csv(here("bibliography",
+                 "cleaned",
+                 "cleaned_final.csv"))
+
+
 
 # quick visualisation through time
-dat_titles %>% 
-  as_tibble() %>% 
-  filter(screened_titles == "selected") %>% 
+dat_final %>% 
   ggplot(aes(year)) +
   geom_bar() +
   theme(axis.text.x = element_text(angle = 45))
