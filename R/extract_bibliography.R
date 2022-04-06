@@ -58,15 +58,10 @@ dat_titles %>%
                  "cleaned_by_title.csv"))
 
 
-# extract topics
-dat_topics <- dat_unique %>% 
-  slice_head(n = 25) %>% 
-  make_dtm(.$title) %>% 
-  run_topic_model(., "lda", 
-                  n_topics = 5, 100)
-
-data_unique %>% 
+# quick visualisation through time
+dat_titles %>% 
   as_tibble() %>% 
+  filter(screened_titles == "selected") %>% 
   ggplot(aes(year)) +
   geom_bar() +
   theme(axis.text.x = element_text(angle = 45))
