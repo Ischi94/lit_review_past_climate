@@ -89,3 +89,23 @@ dat_final %>%
   geom_bar() +
   theme(axis.text.x = element_text(angle = 45))
 
+
+
+# prepare final dataset  --------------------------------------------------
+
+# set up spreadsheet to manually enter information from papers
+dat_final %>% 
+  select(title, author, doi) %>% 
+  add_column(biotic_unit = NA_character_, 
+             clade = NA_character_, 
+             scale = NA_character_, 
+             methodology = NA_character_,
+             past_climate = NA_character_, 
+             quantitative = NA_character_, 
+             past_mechanism = NA_character_, 
+             past_scale = NA_character_, 
+             past_effect_size = NA_integer_, 
+             past_effect_unit = NA_character_) %>% 
+  write_csv2(here("bibliography",
+                  "cleaned",
+                  "review_spreadsheet.csv"))
