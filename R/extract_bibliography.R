@@ -107,4 +107,6 @@ dat_final %>%
              past_effect_size = NA_integer_, 
              past_effect_unit = NA_character_) %>% 
   write_csv2(here("data", 
-                  "review_spreadsheet.csv"))
+                  "review_spreadsheet.csv")) 
+
+
