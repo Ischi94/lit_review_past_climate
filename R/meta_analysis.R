@@ -3,6 +3,7 @@ library(here)
 library(distributional)
 library(ggdist)
 
+
 #set ggplot output
 ggplot2::theme_set(ggplot2::theme_minimal(base_size = 11))
 
@@ -36,26 +37,29 @@ str_count(dat_meta$kingdom, "plantae") %>% sum(na.rm = TRUE)
 str_count(dat_meta$kingdom, "fungi") %>% sum(na.rm = TRUE)
 
 
-dat_meta %>% 
+plot1 <- dat_meta %>% 
   drop_na(scale_in_years) %>% 
-  ggplot(aes(scale_in_years, 1, fill = past_climate)) +
-  geom_jitter(width = 0, 
-              shape = 21, 
-              size = 5,
-              colour = "grey30", 
-              alpha = 0.7) +
+  ggplot(aes(scale_in_years, fill = past_climate, 
+             colour = past_climate)) +
+  geom_dots(
+    aes(y = as.numeric(past_climate == "yes"), 
+        side = ifelse(past_climate == "yes", "bottom", "top")),
+    scale = 0.8) +
   labs(x = "Years", 
        y = NULL) +
   scale_x_continuous(trans = "log10", 
-                     breaks = c(10e-8, 10e-4, 
-                                10e0, 10e4), 
-                     labels = c(expression("10e"^{"-8"}), 
-                                expression("10e"^{"-4"}),
-                                expression("10e"^{"0"}),
-                                expression("10e"^{"4"}))) +
-  scale_fill_manual(values = c("grey10", "#de970bff")) +
+                    breaks = c(10e-8, 10e-4, 
+                               10e0, 10e4), 
+                    labels = c(expression("10e"^{"-8"}), 
+                               expression("10e"^{"-4"}),
+                               expression("10e"^{"0"}),
+                               expression("10e"^{"4"}))) +
+  scale_fill_manual(values = alpha(c("grey60", "#de970bff"), 0.8)) +
+  scale_colour_manual(values = c("grey60", "#de970bff")) +
   theme(axis.text.y = element_blank(), 
         legend.position = "none")
+
+
 
 
 dat_meta %>% 
@@ -67,7 +71,7 @@ dat_meta %>%
 testi <- glm(past_climate == "yes" ~ publish_year, data = dat_meta, family = binomial)
 
 
-tibble(publish_year = seq(min(dat_meta$publish_year), 
+plot2 <- tibble(publish_year = seq(min(dat_meta$publish_year), 
                          max(dat_meta$publish_year),
                          by = 1)) %>% 
   bind_cols(predict(testi, ., se.fit = TRUE)) %>% 
@@ -80,24 +84,29 @@ tibble(publish_year = seq(min(dat_meta$publish_year),
   ) %>%
   ggplot(aes(x = publish_year)) +
   geom_dots(
-    aes(y = as.numeric(past_climate == "yes"), side = ifelse(past_climate == "yes", "bottom", "top")),
+    aes(y = as.numeric(past_climate == "yes"),
+        side = ifelse(past_climate == "yes", "bottom", "top"), 
+        fill = past_climate, 
+        colour = past_climate),
     scale = 0.4,
-    data = dat_meta
+    data = dat_meta %>% drop_na(past_climate)
   ) +
   stat_lineribbon(
-    aes(ydist = p_legacy), alpha = 1/4, fill = "#de970bff"
+    aes(ydist = p_legacy), 
+    alpha = 0.35, 
+    fill = "#de970bff"
   ) +
   labs(
     x = "Date published",
     y = "Pr( Climate Legacy )"
   ) +
   scale_y_continuous(breaks = c(0, 0.5, 1), 
-                     labels = c("0", "0.5", "1"))
+                     labels = c("0", "0.5", "1")) +
+  scale_fill_manual(values = alpha(c(rep("grey10", 3), 
+                               "grey60", "#de970bff"), 0.8)) +
+  scale_colour_manual(values = c("grey60", "#de970bff")) +
+  theme(legend.position = "none")
   
-dat_meta %>% 
-  drop_na(past_climate, quantitative) %>%
-  ggplot(aes(publish_year, past_climate)) +
-  geom_jitter()
 
 confint(testi)
 coef(testi)
