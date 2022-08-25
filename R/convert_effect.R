@@ -19,7 +19,7 @@ study_1 <- tibble(beta_coef = c(1.068, 0.011, -0.011),
          cohens_d_var = esc_B(b = beta_coef, sdy = sd,
                              grp1n = sample_size,
                              grp2n = sample_size)[[3]]) %>% 
-  add_column(study = "Butler et al. 2007") %>% 
+  add_column(study = "Butler et al. 2017") %>% 
   select(study, cohens_d, cohens_d_var)
 
 
@@ -84,7 +84,7 @@ study_5 <- tibble(beta_coef = c(0.98, 0.898, 0.248, 0.242, 0.271, 0.343),
          cohens_d_var = esc_B(b = beta_coef, sdy = sd,
                               grp1n = sample_size,
                               grp2n = sample_size)[[3]]) %>% 
-  add_column(study = "Griebeler et al. 2008") %>% 
+  add_column(study = "Griebeler & Gottschalk 2000") %>% 
   select(study, cohens_d, cohens_d_var)
 
 
@@ -127,7 +127,7 @@ study_6 <- dat_perc %>%
   mutate(across(where(is.numeric), function(x) abs(x)*10))
   
 # reshape
-study_6 <- tibble(study = "Mathes et al. 2021", 
+study_6 <- tibble(study = "Mathes, van Dijk, et al. 2021", 
        cohens_d = c(study_6$cohens_d_warm, 
                     study_6$cohens_d_cool), 
        cohens_d_var = c(study_6$cohens_d_var_warm,
