@@ -169,7 +169,7 @@ confint(testi)
 coef(testi)
 
 # the probability of climate legacies being included at a particular year
-tibble(publish_year = 1980) %>% 
+tibble(publish_year = 2023) %>% 
   bind_cols(predict(testi, ., se.fit = TRUE, type = "response"))
 
 
@@ -223,7 +223,8 @@ plot3 <- dat_cohen_ov %>%
                      y = scale, 
                      colour = col_lev), 
                  position = position_nudge(y = c(0, -0.1, 0, 0, 
-                                                 0, 0.1, 0))) +
+                                                 0, 0.1, 0)), 
+                 alpha = 0.5) +
   geom_point(aes(mean_est, scale, 
                  fill = col_lev), 
              position = position_nudge(y = c(0, -0.1, 0, 0, 
