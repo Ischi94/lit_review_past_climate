@@ -275,3 +275,38 @@ ggsave(plot3, filename = here("figures",
        width = image_width, height = image_height,
        units = image_units, 
        bg = "white", device = ragg::agg_png)
+
+
+
+# funnel plot -------------------------------------------------------------
+
+# calculate average effect from meta-model
+av_effect <- FEsim(model_meta, 1e4)
+
+# create funnel plot
+plot4 <- av_effect %>% 
+  as_tibble() %>% 
+  expand_grid(effect_se = seq(0, 0.28, by = 0.01)) %>% 
+  mutate(lwr = mean - 1.96*effect_se, 
+         upr = mean + 1.96*effect_se) %>% 
+  ggplot(aes(y = effect_se)) +
+  geom_line(aes(x = lwr), 
+            linetype = "dotted", 
+            colour = "grey20") +
+  geom_line(aes(x = upr), 
+            linetype = "dotted", 
+            colour = "grey20") +
+  geom_line(aes(x = mean, y = effect_se), 
+            linetype = "dotted", 
+            colour = "grey20") +
+  geom_point(aes(mean_est, effect_se), 
+             shape = 21, 
+             size = 4,
+             fill = "coral2", 
+             colour = "grey20",
+             alpha = 0.8,
+             data = dat_cohen_res %>% 
+               mutate(effect_se = (upr - lwr) / 3.92)) +
+  scale_y_reverse() +
+  labs(y = "Standard error", 
+       x = "Effect size expressed as Cohen's d")
