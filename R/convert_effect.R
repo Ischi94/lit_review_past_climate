@@ -44,7 +44,7 @@ study_2 <- tibble(beta_coef = c(rep(-0.19, 6),
 
 
 # Varela et al.
-# unstandardized correlation coefficient (pearson)
+# students t-test
 study_3 <- tibble(cohens_d = esc_t(8.324, 0.0001, 273)[[1]], 
        cohens_d_var = esc_t(8.324, 0.0001, 273)[[3]]) %>% 
   add_column(study = "Varela et al. 2015", .before = 1)
