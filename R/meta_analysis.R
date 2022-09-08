@@ -165,12 +165,12 @@ ggsave(plot2, filename = here("figures",
 
 
 # get model summaries
-confint(testi)
-coef(testi)
+confint(model_time)
+coef(model_time)
 
 # the probability of climate legacies being included at a particular year
 tibble(publish_year = 2023) %>% 
-  bind_cols(predict(testi, ., se.fit = TRUE, type = "response"))
+  bind_cols(predict(model_time, ., se.fit = TRUE, type = "response"))
 
 
 
