@@ -310,3 +310,11 @@ plot4 <- av_effect %>%
   scale_y_reverse() +
   labs(y = "Standard error", 
        x = "Effect size expressed as Cohen's d")
+
+
+
+# kendall´s rank correlation ------------------------------------------------
+
+dat_cohen_res %>% 
+  mutate(effect_se = (upr - lwr) / 3.92) %>% 
+  { cor.test(.$mean_est, .$effect_se, method="kendall") }
