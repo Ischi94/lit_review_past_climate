@@ -326,7 +326,7 @@ plot4 <- av_effect %>%
   geom_point(aes(mean_est, effect_se), 
              shape = 21, 
              size = 4,
-             fill = "coral2", 
+             fill = "#de970bff", 
              colour = "grey20",
              alpha = 0.8,
              data = dat_cohen_res %>% 
@@ -334,6 +334,13 @@ plot4 <- av_effect %>%
   scale_y_reverse() +
   labs(y = "Standard error", 
        x = "Effect size expressed as Cohen's d")
+
+# save plot
+ggsave(plot4, filename = here("figures",
+                              "figs1_funnel_plot.png"), 
+       width = image_width, height = image_height,
+       units = image_units, 
+       bg = "white", device = ragg::agg_png)
 
 
 
