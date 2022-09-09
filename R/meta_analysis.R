@@ -65,11 +65,23 @@ dat_meta %>%
 
 # coverage of scales ------------------------------------------------------
 
+
+# add colour indicator column
+dat_meta_plot <- dat_meta %>%
+  drop_na(scale_in_years) %>%
+  mutate(
+    colour_ind = case_when(
+      past_climate == "no" ~ "a",
+      past_climate == "yes" & quantitative == "no" ~ "b",
+      past_climate == "yes" & quantitative == "yes" ~ "c"
+    )
+  )
+
+
 # visualize
-plot1 <- dat_meta %>% 
-  drop_na(scale_in_years) %>% 
+plot1 <- dat_meta_plot %>% 
   ggplot(aes(scale_in_years, fill = past_climate, 
-             colour = past_climate)) +
+             colour = colour_ind)) +
   geom_dots(
     aes(y = as.numeric(past_climate == "yes"), 
         side = ifelse(past_climate == "yes", "bottom", "top")),
@@ -84,7 +96,7 @@ plot1 <- dat_meta %>%
                                expression("10e"^{"0"}),
                                expression("10e"^{"4"}))) +
   annotate(geom = "curve", 
-           x = 7e-3, xend = 8e-1, 
+           x = 7e-3, xend = 5e0, 
            y = 0.77, yend = 0.9, 
            curvature = 0.25, 
            arrow = arrow(length = unit(0.05, "inch"), 
@@ -95,8 +107,20 @@ plot1 <- dat_meta %>%
            label = "Studies including\nclimate legacies", 
            colour = "#de970bff",
            size = 11/.pt) +
+  annotate(geom = "curve", 
+           x = 10e5, xend = 40e3, 
+           y = 0.75, yend = 0.95, 
+           curvature = 0.2, 
+           arrow = arrow(length = unit(0.05, "inch"), 
+                         ends = "last"), 
+           colour = "grey40", lwd = 0.3) +
+  annotate(geom = "text",
+           x = 30e4, y = 0.65,
+           label = "Studies quantifying\nclimate legacies",
+           colour = "grey40",
+           size = 11/.pt) +
   scale_fill_manual(values = alpha(c("grey60", "#de970bff"), 0.8)) +
-  scale_colour_manual(values = c("grey60", "#de970bff")) +
+  scale_colour_manual(values = c("grey60", "#de970bff", "grey40")) +
   theme(axis.text.y = element_blank(), 
         legend.position = "none")
 
@@ -134,9 +158,9 @@ plot2 <- tibble(publish_year = seq(min(dat_meta$publish_year),
     aes(y = as.numeric(past_climate == "yes"),
         side = ifelse(past_climate == "yes", "bottom", "top"), 
         fill = past_climate, 
-        colour = past_climate),
+        colour = colour_ind),
     scale = 0.7,
-    data = dat_meta %>% drop_na(past_climate), 
+    data = dat_meta_plot, 
     dotsize = 1.2
   ) +
   stat_lineribbon(
@@ -153,7 +177,7 @@ plot2 <- tibble(publish_year = seq(min(dat_meta$publish_year),
                      labels = c("0", "0.5", "1")) +
   scale_fill_manual(values = alpha(c(rep("grey10", 3), 
                                "grey60", "#de970bff"), 0.8)) +
-  scale_colour_manual(values = c("grey60", "#de970bff")) +
+  scale_colour_manual(values = c("grey60", "#de970bff", "grey40")) +
   theme(legend.position = "none")
   
 # save logistic plot
