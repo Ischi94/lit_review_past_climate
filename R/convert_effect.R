@@ -104,27 +104,41 @@ study_6 <- dat_perc %>%
   mutate(warm_sd = sqrt(sample_size) * (warm_high - warm_low), 
          cool_sd = sqrt(sample_size) * (cool_high - cool_low)) %>% 
   select(-contains(c("high", "low"))) %>% 
-  # calculate cohens d
-  mutate(cohens_d_warm = esc_mean_sd(grp1m = warm, grp1sd = warm_sd,
-                          grp1n = sample_size,
-                          grp2m = 0, grp2sd = 1,
-                          grp2n = sample_size)[[1]],
-         cohens_d_var_warm = esc_mean_sd(grp1m = warm, grp1sd = warm_sd,
-                                     grp1n = sample_size,
-                                     grp2m = 0, grp2sd = 1,
-                                     grp2n = sample_size)[[3]],
-         cohens_d_cool = esc_mean_sd(grp1m = cool, grp1sd = cool_sd,
-                                     grp1n = sample_size,
-                                     grp2m = 0, grp2sd = 1,
-                                     grp2n = sample_size)[[1]], 
-         cohens_d_var_cool = esc_mean_sd(grp1m = cool, grp1sd = cool_sd,
-                                         grp1n = sample_size,
-                                         grp2m = 0, grp2sd = 1,
-                                         grp2n = sample_size)[[3]]) %>% 
-  select(cohens_d_warm, cohens_d_var_warm, 
-         cohens_d_cool, cohens_d_var_cool) %>% 
-  # expressed as percentage change, calculate back
-  mutate(across(where(is.numeric), function(x) abs(x)*10))
+  # simulate groups with the corresponding sample size and 
+  # percentage change
+  mutate(ww = pmap(list(n = sample_size, 
+                        mean = 1*(1 + warm), 
+                        sd = warm_sd), 
+                   rnorm), 
+         cw = pmap(list(n = sample_size, 
+                        mean = 1, 
+                        sd = warm_sd), 
+                   rnorm), 
+         cc = pmap(list(n = sample_size, 
+                        mean = 1*(1 + cool), 
+                        sd = cool_sd), 
+                   rnorm), 
+         wc = pmap(list(n = sample_size, 
+                        mean = 1, 
+                        sd = cool_sd), 
+                   rnorm), 
+         warm = map_dbl(ww, mean), 
+         warm_comp = map_dbl(cw, mean),
+         cool = map_dbl(cc, mean), 
+         cool_comp = map_dbl(wc, mean)) %>% 
+  select(-c(ww, cw, cc, wc)) %>% 
+  # calculate cohens d by hand
+  mutate(cohens_d_warm = (warm - warm_comp) / sqrt((warm_sd^2 + warm_sd^2)/2), 
+         cohens_d_var_warm = (warm_sd + warm_sd/
+                                warm_sd*warm_sd) + 
+           (cohens_d_warm^2 / 2*(warm_sd + warm_sd)), 
+         cohens_d_cool = (cool - cool_comp) / sqrt((cool_sd^2 + cool_sd^2)/2), 
+         cohens_d_var_cool = (cool_sd + cool_sd/
+                                cool_sd*cool_sd) + 
+           (cohens_d_cool^2 / 2*(cool_sd + cool_sd)), 
+         across(c(cohens_d_warm, cohens_d_cool), abs))
+
+
   
 # reshape
 study_6 <- tibble(study = "Mathes, van Dijk, et al. 2021", 
