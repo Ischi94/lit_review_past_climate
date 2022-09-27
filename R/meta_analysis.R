@@ -258,30 +258,31 @@ plot3 <- dat_cohen_ov %>%
              colour = "grey30") +
   geom_text(aes(mean_est + 0.85, scale, label = study), 
             position = position_nudge(y = c(0, -0.4, 0, 0, 
-                                 0.1, 0.4, -0.1)), 
+                                 0, 0.4, -0.23)), 
             colour = "grey30",
             size = 11/.pt) +
-  annotate("text", x = 1.02, y = 1600, 
+  annotate("text", x = 1.45, y = 1600, 
            label = "Overall", size = 11/.pt,
            colour = "#de970bff") +
   annotate(geom = "curve",
-           x = c(0, 0.51, 0.81, 1.21), 
-           xend = c(0.49, 0.79, 1.19, 2),
+           x = c(0, 0.51, 0.81, 1.21, 2.01), 
+           xend = c(0.49, 0.79, 1.19, 2, 3.3),
            y = 0.095, yend = 0.095,
            curvature = 0,
            arrow = arrow(length = unit(0.05, "inch"),
-                         ends = "both"),
+                         ends = c(rep("both", 4), "first")),
            colour = "grey30", lwd = 0.3) +
   annotate("label", x = c(0.25, 0.65,
-                         1, 1.58), y = 0.1, 
+                         1, 1.58, 2.6), y = 0.1, 
            label = c("small", "medium", 
-                     "large", "very large"),
+                     "large", "very large", 
+                     "huge"),
            size = 10/.pt, label.size = 0,
            label.padding = unit(0.1, "lines"),
            colour = "grey30") +
   labs(y = "Temporal scale of the climate legacy\nin years", 
        x = "Effect size expressed as Cohen's d") +
-  coord_cartesian(xlim = c(0, 2.2)) +
+  coord_cartesian(xlim = c(0, 3.3)) +
   scale_color_manual(values = c("grey60", "#de970bff")) +
   scale_fill_manual(values = c("grey70", "#de970bff")) +
   scale_y_continuous(trans = "log10", 
