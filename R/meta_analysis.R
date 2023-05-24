@@ -79,7 +79,7 @@ dat_meta_plot <- dat_meta %>%
 
 
 # visualize
-plot1 <- dat_meta_plot %>% 
+plot1 <- dat_meta_plot %>%
   ggplot(aes(scale_in_years, fill = past_climate, 
              colour = colour_ind)) +
   geom_dots(
@@ -113,14 +113,14 @@ plot1 <- dat_meta_plot %>%
            curvature = 0.2, 
            arrow = arrow(length = unit(0.05, "inch"), 
                          ends = "last"), 
-           colour = "grey40", lwd = 0.3) +
+           colour = "grey10", lwd = 0.3) +
   annotate(geom = "text",
            x = 30e4, y = 0.65,
            label = "Studies quantifying\nclimate legacies",
-           colour = "grey40",
+           colour = "grey10",
            size = 11/.pt) +
   scale_fill_manual(values = alpha(c("grey60", "#de970bff"), 0.8)) +
-  scale_colour_manual(values = c("grey60", "#de970bff", "grey40")) +
+  scale_colour_manual(values = c("grey60", "#de970bff", "grey10")) +
   theme(axis.text.y = element_blank(), 
         legend.position = "none")
 
