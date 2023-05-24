@@ -320,7 +320,9 @@ dat_cohens_d %>%
   mutate(cohens_d_sd = abs(sqrt(cohens_d_var))) %>% 
   ggplot(aes(cohens_d, 
              -cohens_d_sd)) +
-  geom_point()
+  geom_point() +
+  geom_vline(xintercept = mean(dat_cohens_d$cohens_d)) +
+  geom_abline(intercept = -2, slope = )
 
 # calculate average effect from meta-model
 av_effect <- FEsim(model_meta, 1e4)
@@ -328,9 +330,9 @@ av_effect <- FEsim(model_meta, 1e4)
 funnel(model_metafor)
 
 # create funnel plot
-plot4 <- av_effect %>% 
+plot4 <- av_effect %>%
   as_tibble() %>% 
-  expand_grid(effect_se = seq(0, 0.28, by = 0.01)) %>% 
+  expand_grid(effect_se = seq(0, 2, by = 0.5)) %>% 
   mutate(lwr = mean - 1.96*effect_se, 
          upr = mean + 1.96*effect_se) %>% 
   ggplot(aes(y = effect_se)) +
@@ -343,15 +345,20 @@ plot4 <- av_effect %>%
   geom_line(aes(x = mean, y = effect_se), 
             linetype = "dotted", 
             colour = "grey20") +
-  geom_point(aes(mean_est, effect_se), 
+  geom_point(aes(mean_est, effect_se, 
+                 fill = study), 
              shape = 21, 
              size = 4,
-             fill = "#de970bff", 
              colour = "grey20",
              alpha = 0.8,
-             data = dat_cohen_res %>% 
-               mutate(effect_se = (upr - lwr) / 3.92)) +
-  scale_y_reverse() +
+             data = dat_cohens_d %>% 
+               mutate(effect_se = abs(sqrt(cohens_d_var))) %>% 
+               rename(mean_est = cohens_d) ) +
+  scale_y_reverse(limits = c(2, 0), 
+                  breaks = c(0, 1, 2)) +
+  scale_fill_brewer(type = "qual", 
+                    palette = 8, 
+                    name = "Study") +
   labs(y = "Standard error", 
        x = "Effect size expressed as Cohen's d")
 
@@ -366,6 +373,4 @@ ggsave(plot4, filename = here("figures",
 
 # kendall´s rank correlation ------------------------------------------------
 
-dat_cohen_res %>% 
-  mutate(effect_se = (upr - lwr) / 3.92) %>% 
-  { cor.test(.$mean_est, .$effect_se, method="kendall") }
+ranktest(model_metafor)
