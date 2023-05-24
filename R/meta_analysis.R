@@ -1,9 +1,8 @@
-library(merTools)
 library(tidyverse)
 library(here)
 library(distributional)
 library(ggdist)
-library(lme4)
+library(metafor)
 
 
 
@@ -177,7 +176,7 @@ plot2 <- tibble(publish_year = seq(min(dat_meta$publish_year),
                      labels = c("0", "0.5", "1")) +
   scale_fill_manual(values = alpha(c(rep("grey10", 3), 
                                "grey60", "#de970bff"), 0.8)) +
-  scale_colour_manual(values = c("grey60", "#de970bff", "grey40")) +
+  scale_colour_manual(values = c("grey60", "#de970bff", "grey10")) +
   theme(legend.position = "none")
   
 # save logistic plot
@@ -204,64 +203,76 @@ tibble(publish_year = 2023) %>%
 
 # read in effect size data
 dat_cohens_d <- read_csv(here("data", 
-                              "cohens_d_effect.csv"))
+                              "cohens_d_effect.csv")) %>% 
+  # add id col
+  rownames_to_column("id")
 
 # model as a mixed effect model
+model_metafor <- rma.mv(
+  yi = cohens_d,
+  V = cohens_d_var,
+  data = dat_cohens_d,
+  random = list( ~  1 | study, 
+                 ~ 1 | id))
+
+# study wise
 model_meta <- lmer(cohens_d ~ 1 + (1 | study),
                    weights = 1 / cohens_d_var, 
                    data = dat_cohens_d) 
 
-# extract model estimates
-dat_cohen_res <- predictInterval(model_meta, 
-                newdata = dat_cohens_d %>% 
-                  distinct(study) %>% 
-                  as.data.frame(),
-                which = "full", 
-                include.resid.var = FALSE) %>% 
-  as_tibble() %>% 
-  add_column(study = dat_cohens_d %>% 
-               distinct(study) %>% 
-               pull()) %>% 
-  select(study, mean_est = fit, lwr, upr)
 
-# calculate overall effect
-dat_cohen_ov <- FEsim(model_meta, 1e4) %>% 
+# extract estimates
+dat_metafor_ov  <- model_metafor %>% 
+  predict() %>% 
   as_tibble() %>% 
-  mutate(lwr = mean - 1.96*sd, 
-         upr = mean + 1.96*sd) %>% 
-  add_column(study = " ") %>% 
-  select(study, mean_est = mean, lwr, upr) %>% 
-  bind_rows(dat_cohen_res) %>% 
-  # add scale of the focal climate legacy from spreadsheet
-  add_column(scale = c(4000.5, 1, 1, 
-                       8000, 10000000, 
-                       1, 6000000))
+  add_column(study = " ", 
+             scale = 1400) %>% 
+  select(mean_est = pred, 
+         ci.lb, ci.ub, study, scale) %>% 
+  # add study wise effect
+  bind_rows(predictInterval(model_meta,
+                            newdata = dat_cohens_d %>%
+                              distinct(study) %>%
+                              as.data.frame(),
+                            which = "full",
+                            include.resid.var = FALSE) %>% 
+      as_tibble() %>% 
+      add_column(study = dat_cohens_d %>% 
+                   distinct(study) %>% 
+                   pull()) %>% 
+      select(study, mean_est = fit, ci.lb = lwr, ci.ub = upr) %>%
+      # add scale of the focal climate legacy from spreadsheet
+      add_column(scale = c(37, 57, 
+                           21000, 6000000, 
+                           1, 6000000)))
+
+
 
 # visualize as a forest plot
-plot3 <- dat_cohen_ov %>% 
-  mutate(col_lev = if_else(study == " ", 
-                           "yes", "no")) %>% 
+plot3 <- dat_metafor_ov %>%
+  mutate(col_lev = if_else(study == " ",
+                           "yes", "no")) %>%
   ggplot() +
-  geom_linerange(aes(xmin = lwr, 
-                     xmax = upr, 
-                     y = scale, 
-                     colour = col_lev), 
-                 position = position_nudge(y = c(0, -0.1, 0, 0, 
-                                                 0, 0.1, 0)), 
-                 alpha = 0.5) +
+  geom_linerange(aes(xmin = ci.lb, 
+                      xmax = ci.ub, 
+                      y = scale, 
+                      colour = col_lev), 
+                  position = position_nudge(y = c(0, -0.2, 0, 0, 
+                                                  0, 0.2, 0)), 
+                  alpha = 0.5) +
   geom_point(aes(mean_est, scale, 
                  fill = col_lev), 
-             position = position_nudge(y = c(0, -0.1, 0, 0, 
-                                             0, 0.1, 0)), 
+             position = position_nudge(y = c(0, -0.2, 0, 0, 
+                                             0, 0.2, 0)), 
              shape = 21, 
              size = 3, 
              colour = "grey30") +
-  geom_text(aes(mean_est + 0.85, scale, label = study), 
-            position = position_nudge(y = c(0, -0.4, 0, 0, 
-                                 0, 0.4, -0.23)), 
+  geom_text(aes(mean_est, scale, label = study), 
+            position = position_nudge(y = c(0.4,-0.6, 0.4, 0.4,
+                                            -0.4, 0.6,0.4)), 
             colour = "grey30",
-            size = 11/.pt) +
-  annotate("text", x = 1.45, y = 1600, 
+            size = 10/.pt) +
+  annotate("text", x = 1.5, y = 4000, 
            label = "Overall", size = 11/.pt,
            colour = "#de970bff") +
   annotate(geom = "curve",
@@ -282,7 +293,7 @@ plot3 <- dat_cohen_ov %>%
            colour = "grey30") +
   labs(y = "Temporal scale of the climate legacy\nin years", 
        x = "Effect size expressed as Cohen's d") +
-  coord_cartesian(xlim = c(0, 3.3)) +
+  coord_cartesian(xlim = c(0, 3)) +
   scale_color_manual(values = c("grey60", "#de970bff")) +
   scale_fill_manual(values = c("grey70", "#de970bff")) +
   scale_y_continuous(trans = "log10", 
@@ -294,7 +305,7 @@ plot3 <- dat_cohen_ov %>%
                                 expression("10e"^{"6"}))) +
   theme(legend.position = "none")
 
-# save forest plot
+# saveplot
 ggsave(plot3, filename = here("figures",
                               "fig4_meta_effect.png"), 
        width = image_width, height = image_height,
@@ -305,8 +316,16 @@ ggsave(plot3, filename = here("figures",
 
 # funnel plot -------------------------------------------------------------
 
+dat_cohens_d %>%
+  mutate(cohens_d_sd = abs(sqrt(cohens_d_var))) %>% 
+  ggplot(aes(cohens_d, 
+             -cohens_d_sd)) +
+  geom_point()
+
 # calculate average effect from meta-model
 av_effect <- FEsim(model_meta, 1e4)
+
+funnel(model_metafor)
 
 # create funnel plot
 plot4 <- av_effect %>% 
