@@ -3,6 +3,7 @@ library(here)
 library(distributional)
 library(ggdist)
 library(metafor)
+library(lme4)
 
 
 
@@ -84,7 +85,8 @@ plot1 <- dat_meta_plot %>%
   geom_dots(
     aes(y = as.numeric(past_climate == "yes"), 
         side = ifelse(past_climate == "yes", "bottom", "top")),
-    scale = 0.8) +
+    scale = 3, 
+    position = position_dodgejust(width = -0.2)) +
   labs(x = "Years", 
        y = NULL) +
   scale_x_continuous(trans = "log10", 
@@ -95,7 +97,7 @@ plot1 <- dat_meta_plot %>%
                                expression("10e"^{"0"}),
                                expression("10e"^{"4"}))) +
   annotate(geom = "curve", 
-           x = 7e-3, xend = 5e0, 
+           x = 7e-3, xend = 9e0, 
            y = 0.77, yend = 0.9, 
            curvature = 0.25, 
            arrow = arrow(length = unit(0.05, "inch"), 
@@ -107,9 +109,9 @@ plot1 <- dat_meta_plot %>%
            colour = "#de970bff",
            size = 11/.pt) +
   annotate(geom = "curve", 
-           x = 10e5, xend = 40e3, 
+           x = 3e5, xend = 25e3, 
            y = 0.75, yend = 0.95, 
-           curvature = 0.2, 
+           curvature = -0.2, 
            arrow = arrow(length = unit(0.05, "inch"), 
                          ends = "last"), 
            colour = "grey10", lwd = 0.3) +
@@ -230,7 +232,7 @@ dat_metafor_ov  <- model_metafor %>%
   select(mean_est = pred, 
          ci.lb, ci.ub, study, scale) %>% 
   # add study wise effect
-  bind_rows(predictInterval(model_meta,
+  bind_rows(merTools::predictInterval(model_meta,
                             newdata = dat_cohens_d %>%
                               distinct(study) %>%
                               as.data.frame(),
@@ -250,6 +252,15 @@ dat_metafor_ov  <- model_metafor %>%
 
 # visualize as a forest plot
 plot3 <- dat_metafor_ov %>%
+  # add reference system from proceedings B
+  left_join(tibble(study = dat_metafor_ov$study, 
+                   study_ref = c("", 
+                                 "(29)", 
+                                 "(31)", 
+                                 "(32)", 
+                                 "(34)", 
+                                 "(30)", 
+                                 "(33)"))) %>% 
   mutate(col_lev = if_else(study == " ",
                            "yes", "no")) %>%
   ggplot() +
@@ -267,9 +278,9 @@ plot3 <- dat_metafor_ov %>%
              shape = 21, 
              size = 3, 
              colour = "grey30") +
-  geom_text(aes(mean_est, scale, label = study), 
-            position = position_nudge(y = c(0.4,-0.6, 0.4, 0.4,
-                                            -0.4, 0.6,0.4)), 
+  geom_text(aes(mean_est, scale, label = study_ref), 
+            position = position_nudge(y = c(0.4,0.2, 0.4, 0.4,
+                                            0.4, 0.6,0.4)), 
             colour = "grey30",
             size = 10/.pt) +
   annotate("text", x = 1.5, y = 4000, 
