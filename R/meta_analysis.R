@@ -391,7 +391,8 @@ ranktest(model_metafor)
 
 fig2 <- plot1 /
   plot2 +
-  plot_annotation(tag_levels = "A") +
+  plot_annotation(tag_levels = "a", 
+                  tag_suffix = ")") +
   plot_layout(heights = c(1.5, 1))
 
 
