@@ -4,7 +4,7 @@ library(distributional)
 library(ggdist)
 library(metafor)
 library(lme4)
-
+library(patchwork)
 
 
 # general setting ---------------------------------------------------------
@@ -87,7 +87,7 @@ plot1 <- dat_meta_plot %>%
         side = ifelse(past_climate == "yes", "bottom", "top")),
     scale = 3, 
     position = position_dodgejust(width = -0.2)) +
-  labs(x = "Years", 
+  labs(x = "Temporal scale in years", 
        y = NULL) +
   scale_x_continuous(trans = "log10", 
                     breaks = c(10e-8, 10e-4, 
@@ -126,12 +126,12 @@ plot1 <- dat_meta_plot %>%
         legend.position = "none")
 
 
-# save scale plot
-ggsave(plot1, filename = here("figures",
-                              "fig2_meta_scales.png"), 
-       width = image_width, height = image_height,
-       units = image_units, 
-       bg = "white", device = ragg::agg_png)
+# # save scale plot
+# ggsave(plot1, filename = here("figures",
+#                               "fig2_meta_scales.png"), 
+#        width = image_width, height = image_height,
+#        units = image_units, 
+#        bg = "white", device = ragg::agg_png)
 
 
 
@@ -181,12 +181,12 @@ plot2 <- tibble(publish_year = seq(min(dat_meta$publish_year),
   scale_colour_manual(values = c("grey60", "#de970bff", "grey10")) +
   theme(legend.position = "none")
   
-# save logistic plot
-ggsave(plot2, filename = here("figures",
-                              "fig3_meta_year.png"), 
-       width = image_width, height = image_height,
-       units = image_units, 
-       bg = "white", device = ragg::agg_png)
+# # save logistic plot
+# ggsave(plot2, filename = here("figures",
+#                               "fig3_meta_year.png"), 
+#        width = image_width, height = image_height,
+#        units = image_units, 
+#        bg = "white", device = ragg::agg_png)
 
 
 # get model summaries
@@ -217,36 +217,36 @@ model_metafor <- rma.mv(
   random = list( ~  1 | study, 
                  ~ 1 | id))
 
-# study wise
-model_meta <- lmer(cohens_d ~ 1 + (1 | study),
-                   weights = 1 / cohens_d_var, 
-                   data = dat_cohens_d) 
+model_metafor %>% 
+  ranef() %>% 
+  pluck("study") %>% 
+  as_tibble(rownames = "study") %>% 
+  mutate(across(c(intrcpt, pi.lb, pi.ub), 
+                ~ .x + coef(model_metafor)))
 
 
 # extract estimates
 dat_metafor_ov  <- model_metafor %>% 
   predict() %>% 
   as_tibble() %>% 
-  add_column(study = " ", 
-             scale = 1400) %>% 
+  add_column(study = " ") %>% 
   select(mean_est = pred, 
-         ci.lb, ci.ub, study, scale) %>% 
+         ci.lb, ci.ub, study) %>% 
   # add study wise effect
-  bind_rows(merTools::predictInterval(model_meta,
-                            newdata = dat_cohens_d %>%
-                              distinct(study) %>%
-                              as.data.frame(),
-                            which = "full",
-                            include.resid.var = FALSE) %>% 
-      as_tibble() %>% 
-      add_column(study = dat_cohens_d %>% 
-                   distinct(study) %>% 
-                   pull()) %>% 
-      select(study, mean_est = fit, ci.lb = lwr, ci.ub = upr) %>%
+  bind_rows(model_metafor %>% 
+              ranef() %>% 
+              pluck("study") %>% 
+              as_tibble(rownames = "study") %>% 
+              mutate(across(c(intrcpt, pi.lb, pi.ub), 
+                            ~ .x + coef(model_metafor))) %>% 
+              select(mean_est = intrcpt, 
+                     ci.lb = pi.lb, 
+                     ci.ub = pi.ub, 
+                     study)) %>% 
       # add scale of the focal climate legacy from spreadsheet
-      add_column(scale = c(37, 57, 
+      add_column(scale = c(1400, 37, 57, 
                            21000, 6000000, 
-                           1, 6000000)))
+                           1, 6000000))
 
 
 
@@ -269,18 +269,18 @@ plot3 <- dat_metafor_ov %>%
                       y = scale, 
                       colour = col_lev), 
                   position = position_nudge(y = c(0, -0.2, 0, 0, 
-                                                  0, 0.2, 0)), 
+                                                  0, 0.2, 0.2)), 
                   alpha = 0.5) +
   geom_point(aes(mean_est, scale, 
                  fill = col_lev), 
              position = position_nudge(y = c(0, -0.2, 0, 0, 
-                                             0, 0.2, 0)), 
+                                             0, 0.2, 0.2)), 
              shape = 21, 
              size = 3, 
              colour = "grey30") +
   geom_text(aes(mean_est, scale, label = study_ref), 
-            position = position_nudge(y = c(0.4,0.2, 0.4, 0.4,
-                                            0.4, 0.6,0.4)), 
+            position = position_nudge(y = c(0.4, -0.5, 0.4, 0.4,
+                                            -0.3, 0.6,0.5)), 
             colour = "grey30",
             size = 10/.pt) +
   annotate("text", x = 1.5, y = 4000, 
@@ -316,12 +316,12 @@ plot3 <- dat_metafor_ov %>%
                                 expression("10e"^{"6"}))) +
   theme(legend.position = "none")
 
-# saveplot
-ggsave(plot3, filename = here("figures",
-                              "fig4_meta_effect.png"), 
-       width = image_width, height = image_height,
-       units = image_units, 
-       bg = "white", device = ragg::agg_png)
+# # saveplot
+# ggsave(plot3, filename = here("figures",
+#                               "fig4_meta_effect.png"), 
+#        width = image_width, height = image_height,
+#        units = image_units, 
+#        bg = "white", device = ragg::agg_png)
 
 
 
@@ -335,17 +335,16 @@ dat_cohens_d %>%
   geom_vline(xintercept = mean(dat_cohens_d$cohens_d)) +
   geom_abline(intercept = -2, slope = )
 
-# calculate average effect from meta-model
-av_effect <- FEsim(model_meta, 1e4)
 
-funnel(model_metafor)
+funnel(model_metafor) %>% 
+  as_tibble()
 
 # create funnel plot
-plot4 <- av_effect %>%
+plot4 <- coef(model_metafor) %>%
   as_tibble() %>% 
   expand_grid(effect_se = seq(0, 2, by = 0.5)) %>% 
-  mutate(lwr = mean - 1.96*effect_se, 
-         upr = mean + 1.96*effect_se) %>% 
+  mutate(lwr = value - 1.96*effect_se, 
+         upr = value + 1.96*effect_se) %>% 
   ggplot(aes(y = effect_se)) +
   geom_line(aes(x = lwr), 
             linetype = "dotted", 
@@ -353,7 +352,7 @@ plot4 <- av_effect %>%
   geom_line(aes(x = upr), 
             linetype = "dotted", 
             colour = "grey20") +
-  geom_line(aes(x = mean, y = effect_se), 
+  geom_line(aes(x = value, y = effect_se), 
             linetype = "dotted", 
             colour = "grey20") +
   geom_point(aes(mean_est, effect_se, 
@@ -373,15 +372,48 @@ plot4 <- av_effect %>%
   labs(y = "Standard error", 
        x = "Effect size expressed as Cohen's d")
 
+# # save plot
+# ggsave(plot4, filename = here("figures",
+#                               "figs1_funnel_plot.png"), 
+#        width = image_width, height = image_height,
+#        units = image_units, 
+#        bg = "white", device = ragg::agg_png)
+
+
+
+# kendall´s rank correlation 
+
+ranktest(model_metafor)
+
+
+
+# save plots --------------------------------------------------------------
+
+fig2 <- plot1 /
+  plot2 +
+  plot_annotation(tag_levels = "A") +
+  plot_layout(heights = c(1.5, 1))
+
+
 # save plot
-ggsave(plot4, filename = here("figures",
-                              "figs1_funnel_plot.png"), 
-       width = image_width, height = image_height,
-       units = image_units, 
+ggsave(fig2, filename = here("figures",
+                              "fig2.png"),
+       width = image_width, height = image_height*1.5,
+       units = image_units,
        bg = "white", device = ragg::agg_png)
 
 
+# save plot
+ggsave(plot3, filename = here("figures",
+                             "fig3.png"),
+       width = image_width, height = image_height,
+       units = image_units,
+       bg = "white", device = ragg::agg_png)
 
-# kendall´s rank correlation ------------------------------------------------
 
-ranktest(model_metafor)
+# save plot
+ggsave(plot4, filename = here("figures",
+                              "figs1_funnel_plot.png"),
+       width = image_width, height = image_height,
+       units = image_units,
+       bg = "white", device = ragg::agg_png)
