@@ -1,14 +1,7 @@
-# lit_review_past_climate
+# The effect of climate legacies on extinction dynamics: A systematic review
 
-We conducted a search in the ISI Web of Science database, using the following keywords: 
+One of the main objectives of ecological research and conservation science is to enhance our understanding of the processes that lead to species extinction. A potentially crucial mechanism of extinction is the dependence of contemporary biodiversity dynamics on past climate, also known as “climate legacy”. However, the general impact of climate legacy on extinction dynamics is unknown. Here, we conduct a systematic review to assess and summarise the effect of climate legacies on extinction dynamics. We find that few works studying the relationship between extinction dynamics and climate include the potential impact of climate legacies (10%), with even less studies reaching beyond merely discussing them (3%). The studies in which climate legacies were included and quantified consistently describe large impacts on extinction dynamics. These impacts include an increase in extinction risk of up to 40% when temperature changes add to a long-term trend in the same direction, as well as significant effects on species' adaptations, population dynamics, and juvenile recruitment. Various ecological processes through which climate legacies could shape the susceptibility of modern ecosystems to anthropogenic climate change were proposed, including niche conservatism, physiological thresholds, time-lags, and cascading effects. Overall, we find high agreement that climate legacy is a crucial mechanism shaping extinction dynamics. Incorporating climate legacies in biodiversity assessments could be a key step towards a better understanding of ecological consequences arising from climate change.
 
-**Web of science**: (TI=((‘extinct*’ OR ‘extirpat*’) AND (‘climate change’ OR ‘changing climate’ OR ‘temperature’))) AND DT=(Article)
-- on 6th of April 22
-- including author, title, and abstract
-
-**Scopus**: TITLE(("extinct*" OR "extirpat*") AND ("climate change" OR "changing climate" OR "temperature")) AND DOCTYPE(ar)
-- on 6th of April 22
-- including author, title, and abstract
 
  
 
