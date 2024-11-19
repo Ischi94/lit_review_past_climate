@@ -4,3 +4,9 @@
 .Ruserdata
 
 output/
+R/*.html
+R/*.qmd
+R/*vignette*
+figure/*vignette*
+data/*imperio*
+data/*mathes*
